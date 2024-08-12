@@ -1,0 +1,69 @@
+DATASET: 'OPV2VDataset'
+DATA_PATH: '../data/OPV2V'
+CLASS_NAMES: ['Car']
+
+POINT_CLOUD_RANGE: [-140, -40, -3, 140, 40, 1]
+
+DATA_SPLIT: {
+    'train': train,
+    'test': test
+}
+
+INFO_PATH: {
+    'train': opv2v_infos_train.pkl,
+    'test': opv2v_infos_test.pkl
+}
+
+GET_ITEM_LIST: ["points"]
+FOV_POINTS_ONLY: False # use all points since there is no camera
+
+DATA_AUGMENTOR:
+    DISABLE_AUG_LIST: ['placeholder']
+    AUG_CONFIG_LIST:
+        - NAME: random_world_rotation
+          WORLD_ROT_ANGLE: 0.0
+
+
+POINT_FEATURE_ENCODING: {
+    encoding_type: absolute_coordinates_encoding,
+    used_feature_list: ['x', 'y', 'z', 'intensity'],
+    src_feature_list: ['x', 'y', 'z', 'intensity'],
+}
+
+
+DATA_PROCESSOR:
+    - NAME: mask_points_and_boxes_outside_range
+      REMOVE_OUTSIDE_BOXES: True
+
+    - NAME: shuffle_points
+      SHUFFLE_ENABLED: {
+        'train': True,
+        'test': False
+      }
+
+    - NAME: transform_points_to_voxels
+      VOXEL_SIZE: [ 0.05, 0.05, 0.1 ]
+      MAX_POINTS_PER_VOXEL: 5
+      MAX_NUMBER_OF_VOXELS: {
+        'train': 150000,
+        'test': 150000
+      }
+
+COLLECTIVE_DATA_PROCESSOR:
+    use_coop_info: True # whether to use coop data (needs to be False for early fusion)
+    early_fusion: False # use all point clouds as ego points
+    limit_com_range: True
+    range_limit: 70
+    transform_points_to_voxels:
+      VOXEL_SIZE: [ 0.05, 0.05, 0.1 ]
+      MAX_POINTS_PER_VOXEL: 5
+      MAX_NUMBER_OF_VOXELS: {
+        'train': 150000,
+        'test': 150000
+      }
+    voxel_method: 'multi_resolution'
+    resolutions: [[ 0.05, 0.05, 0.1 ], [ 0.1, 0.1, 0.2 ], [ 0.2, 0.2, 0.4 ]]
+    assign_method: 'random' # use 'low', 'mid', 'high' to map all coop points to one resolution, use 'random' for random assignment
+
+
+
