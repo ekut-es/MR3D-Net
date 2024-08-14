@@ -95,7 +95,7 @@ For more details on training and testing configuration please have a look at tra
 ### MR3D-Net Results on OPV2V
 |                    | Car AP@IoU0.7 | Bandwidth@10Hz [Mbit/s] |
 | ------------------ | :-----------: | :---------------------: | 
-| No Fusion          | 74.8          | -                       |
+| No Fusion          | 76.7          | -                       |
 | Low Resolution     | 82.1          | 4.3                     |
 | Medium Resolution  | 83.2          | 8.8                     |
 | High Resolution    | 83.9          | 14.4                    |
@@ -104,8 +104,17 @@ For more details on training and testing configuration please have a look at tra
 
 ## Citation
 If you find this project useful in your research, please consider citing:
-
-TODO
+```
+@misc{teufel2024mr3dnet,
+      title={MR3D-Net: Dynamic Multi-Resolution 3D Sparse Voxel Grid Fusion for LiDAR-Based Collective Perception}, 
+      author={Sven Teufel and Jörg Gamerdinger and Georg Volk and Oliver Bringmann},
+      year={2024},
+      eprint={2408.06137},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV},
+      url={https://arxiv.org/abs/2408.06137}, 
+}
+```
 
 ### OpenPCDet
 
