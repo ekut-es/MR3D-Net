@@ -93,14 +93,15 @@ For more details on training and testing configuration please have a look at tra
 
 
 ### MR3D-Net Results on OPV2V
-|                                    | Car AP@IoU0.7 | Bandwidth@10Hz [Mbit/s] | Model Checkpoint |
-| :--------------------------------: | :-----------: | :---------------------: | 
-| No Fusion                          | 76.7          | -                       | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/9ea529e129ad48de8f5d/)
-| Low Resolution                     | 82.1          | 4.3                     | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/24badeb37fe34276b5e3/)
-| Medium Resolution                  | 83.2          | 8.8                     | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/46a3b9305db94983960a/)
-| High Resolution                    | 83.9          | 14.4                    | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/ccc8cb6a24f442df9c05/)
-| Dynamic Resolution                 | 82.4          | 9.2                     | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/c31c56a649a7476f87af/)
-| Mean Features (Dynamic Resolution) | 81.7          | 42.2                    | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/6bc916642f10494da3ef/)
+
+|                                    | Car AP@IoU0.7 | Bandwidth@10Hz [Mbit/s] | Model Checkpoint                                                              |
+| :--------------------------------: | :-----------: | :---------------------: | :---------------------------------------------------------------------------: |
+| No Fusion                          | 76.7          | -                       | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/9ea529e129ad48de8f5d/)    |
+| Low Resolution                     | 82.1          | 4.3                     | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/24badeb37fe34276b5e3/)    |
+| Medium Resolution                  | 83.2          | 8.8                     | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/46a3b9305db94983960a/)    |
+| High Resolution                    | 83.9          | 14.4                    | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/ccc8cb6a24f442df9c05/)    |
+| Dynamic Resolution                 | 82.4          | 9.2                     | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/c31c56a649a7476f87af/)    |
+| Mean Features (Dynamic Resolution) | 81.7          | 42.2                    | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/6bc916642f10494da3ef/)    |
 
 ## Citation
 If you find this project useful in your research, please consider citing:
