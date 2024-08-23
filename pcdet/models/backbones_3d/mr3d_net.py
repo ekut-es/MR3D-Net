@@ -4,7 +4,6 @@ import torch.nn as nn
 import torch
 from ...utils.spconv_utils import spconv
 from pcdet.utils.collective_utils import scatter_duplicates, sparse_concat
-import numpy as np
 
 def conv_block(in_channels, out_channels, kernel_size, indice_key=None, stride=1, padding=0,conv_type='subm', norm_fn=None):
     if conv_type == 'subm':
@@ -120,18 +119,18 @@ class MR3DNet(nn.Module):
         input_sp_tensor_mid = spconv.SparseConvTensor(
             features=batch_dict['coop_voxel_features_mid'],
             indices=batch_dict['coop_voxel_coords_mid'].int(),
-            spatial_shape=np.array([21, 800, 2800]),
+            spatial_shape=self.model_cfg.MID_GRID_SIZE,
             batch_size=batch_dict['batch_size']
         )
 
         input_sp_tensor_low = spconv.SparseConvTensor(
             features=batch_dict['coop_voxel_features_low'],
             indices=batch_dict['coop_voxel_coords_low'].int(),
-            spatial_shape=np.array([11, 400, 1400]),
+            spatial_shape=self.model_cfg.LOW_GRID_SIZE,
             batch_size=batch_dict['batch_size']
         )
 
-        scatter_func = 'max'
+        scatter_func = self.model_cfg.SCATTER_FUNC
         
         #Input (Stride = 1)
         x_low = self.conv_input_low(input_sp_tensor_low)
@@ -187,6 +186,132 @@ class MR3DNet(nn.Module):
         # feature channel concatenation
         out = out_loc.replace_feature(torch.cat((out_loc.features, out_coll.features), dim=1))
 
+
+        batch_dict.update({
+            'encoded_spconv_tensor': out,
+            'encoded_spconv_tensor_stride': 8
+        })
+        batch_dict.update({
+            'multi_scale_3d_features': {
+                'x_conv1': x_conv1_loc,
+                'x_conv2': x_conv2_loc,
+                'x_conv3': x_conv3_loc,
+                'x_conv4': x_conv4_loc,
+            }
+        })
+        batch_dict.update({
+            'multi_scale_3d_strides': {
+                'x_conv1': 1,
+                'x_conv2': 2,
+                'x_conv3': 4,
+                'x_conv4': 8,
+            }
+        })
+
+        return batch_dict
+    
+
+class SR3DNet(nn.Module):
+    def __init__(self, model_cfg, input_channels, grid_size, **kwargs):
+        super().__init__()
+        self.model_cfg = model_cfg
+        norm_fn = partial(nn.BatchNorm1d, eps=6.2e-5, momentum=0.01)
+        conv_channels = self.model_cfg.CONV_CHANNELS
+
+        ## local input stream
+        self.local_input, self.local_conv1, self.local_conv2, self.local_conv3, self.local_conv4 = build_resolution_stream(input_channels, conv_channels, self.model_cfg.LOC_STRIDES, self.model_cfg.LOCAL_SUBM_PER_BLOCK,  key='local')
+
+        ## collective input stream
+        collective_input_channels = self.model_cfg.COLLECTIVE_INPUT_CHANNELS
+        self.conv_input_coll, self.conv1_coll, self.conv2_coll, self.conv3_coll, self.conv4_coll = build_resolution_stream(collective_input_channels, conv_channels, self.model_cfg.COLL_STRIDES, self.model_cfg.COLLECTIVE_SUBM_PER_BLOCK, key='collective')
+
+        # out conv
+        last_pad = 0
+        last_pad = self.model_cfg.get('last_pad', last_pad)
+        self.conv_out = spconv.SparseSequential(
+            #[200, 150, 5] -> [200, 150, 2]
+            spconv.SparseConv3d(conv_channels[2], conv_channels[3], (3, 1, 1), stride=(2, 1, 1), padding=last_pad, bias=False, indice_key='spconv_down2'),
+            norm_fn(conv_channels[3]),
+            nn.ReLU(),
+        )
+
+        
+        self.num_point_features = 256
+        self.backbone_channels = {
+            'x_conv1': 16,
+            'x_conv2': 32,
+            'x_conv3': 64,
+            'x_conv4': 64
+        }
+
+
+    def forward(self, batch_dict):
+        """
+        Args:
+            batch_dict:
+                batch_size: int
+                vfe_features: (num_voxels, C)
+                voxel_coords: (num_voxels, 4), [batch_idx, z_idx, y_idx, x_idx]
+        Returns:
+            batch_dict:
+                encoded_spconv_tensor: sparse tensor
+        """
+
+        input_sp_tensor_loc = spconv.SparseConvTensor(
+            features=batch_dict['voxel_features'],
+            indices=batch_dict['voxel_coords'].int(),
+            spatial_shape=self.model_cfg.LOC_GRID_SIZE,
+            batch_size=batch_dict['batch_size']
+        )
+
+        input_sp_tensor_coll = spconv.SparseConvTensor(
+            features=batch_dict['coop_voxel_features'],
+            indices=batch_dict['coop_voxel_coords'].int(),
+            spatial_shape=self.model_cfg.COLL_GRID_SIZE,
+            batch_size=batch_dict['batch_size']
+        )
+
+        scatter_func = self.model_cfg.SCATTER_FUNC
+        
+        #Input (Stride = 1)
+        x_coll = self.conv_input_coll(input_sp_tensor_coll)
+        x_loc = self.local_input(input_sp_tensor_loc)
+
+        # conv1
+        x_conv1_coll = self.conv1_coll(x_coll)
+        x_conv1_loc = self.local_conv1(x_loc)
+            
+
+        # conv 1 scatter/fusion
+        if x_conv1_coll.spatial_shape == x_conv1_loc.spatial_shape:
+            x_conv1_loc = sparse_concat(x_conv1_coll, x_conv1_loc, scatter_function=scatter_func)
+
+        # conv2
+        x_conv2_coll = self.conv2_coll(x_conv1_coll)
+        x_conv2_loc = self.local_conv2(x_conv1_loc)
+
+        # conv 2 scatter
+        if x_conv2_coll.spatial_shape == x_conv2_loc.spatial_shape:
+            x_conv2_loc = sparse_concat(x_conv2_coll, x_conv2_loc, scatter_function=scatter_func)
+
+        # conv3
+        x_conv3_coll = self.conv3_coll(x_conv2_coll)
+        x_conv3_loc = self.local_conv3(x_conv2_loc)
+
+        # conv 3 scatter
+        if x_conv3_coll.spatial_shape == x_conv3_loc.spatial_shape:
+            x_conv3_loc = sparse_concat(x_conv3_coll, x_conv3_loc, scatter_function=scatter_func)
+
+        # conv4
+        x_conv4_coll = self.conv4_coll(x_conv3_coll)
+        x_conv4_loc = self.local_conv4(x_conv3_loc)
+
+        # conv4 scatter
+        if x_conv4_coll.spatial_shape == x_conv4_loc.spatial_shape:
+            x_conv4_loc = sparse_concat(x_conv4_coll, x_conv4_loc, scatter_function=scatter_func)
+
+        #  out conv
+        out = self.conv_out(x_conv4_loc)
 
         batch_dict.update({
             'encoded_spconv_tensor': out,

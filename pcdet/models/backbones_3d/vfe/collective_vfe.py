@@ -24,7 +24,7 @@ class CollectiveMeanVFE(VFETemplate):
         """
 
 
-        if batch_dict['voxel_method'][0] == 'all':
+        if batch_dict['voxel_method'][0] == 'single_resolution':
             voxel_features, voxel_num_points = batch_dict['coop_voxels'], batch_dict['coop_voxel_num_points']
             points_mean = voxel_features[:, :, :].sum(dim=1, keepdim=False)
             normalizer = torch.clamp_min(voxel_num_points.view(-1, 1), min=1.0).type_as(voxel_features)
@@ -64,7 +64,7 @@ class CollectiveCenterVFE(VFETemplate):
         Returns:
             vfe_features: (num_voxels, C)
         """
-        if batch_dict['voxel_method'][0] == 'all':
+        if batch_dict['voxel_method'][0] == 'single_resolution':
             voxel_coords = batch_dict['coop_voxel_coords']
             resolution = batch_dict['resolution']
             point_cloud_range =  batch_dict['point_cloud_range']

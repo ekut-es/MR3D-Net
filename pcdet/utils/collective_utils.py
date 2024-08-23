@@ -20,7 +20,7 @@ def scatter_duplicates(x: spconv.SparseConvTensor, scatter_function='sum'):
     assert scattered_features.is_contiguous()
     return spconv.SparseConvTensor(scattered_features, unique_indices, x.spatial_shape, x.batch_size)
 
-def sparse_concat(x: spconv.SparseConvTensor, y: spconv.SparseConvTensor, z: Optional[spconv.SparseConvTensor]=None, scatter_function='sum'):
+def sparse_concat(x: spconv.SparseConvTensor, y: spconv.SparseConvTensor, z: Optional[spconv.SparseConvTensor]=None, scatter=True, scatter_function='sum'):
     assert x.spatial_shape == y.spatial_shape
     assert x.features.shape[1] == y.features.shape[1]
     if z is not None:
@@ -32,7 +32,7 @@ def sparse_concat(x: spconv.SparseConvTensor, y: spconv.SparseConvTensor, z: Opt
         features = torch.cat([x.features, y.features], dim=0)
         indices = torch.cat([x.indices, y.indices], dim=0)
     xyz = spconv.SparseConvTensor(features=features, indices=indices, spatial_shape=x.spatial_shape, batch_size=x.batch_size)
-    return scatter_duplicates(xyz, scatter_function=scatter_function)
+    return scatter_duplicates(xyz, scatter_function=scatter_function) if scatter else xyz
     
 
 def get_common_voxel_features_diff_dim(high_coords, low_coords, high_features, low_features, scale_xyz=(2, 2, 2), window_size_xyz=(1, 1, 1), spatial_shape_zyx=(41, 1600, 5600)):

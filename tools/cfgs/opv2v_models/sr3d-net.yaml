@@ -2,42 +2,61 @@ CLASS_NAMES: ['Car']
 
 DATA_CONFIG:
     _BASE_CONFIG_: cfgs/dataset_configs/opv2v_dataset.yaml
-    DATA_AUGMENTOR:
-        DISABLE_AUG_LIST: ['placeholder']
-        AUG_CONFIG_LIST:
-            - NAME: random_world_flip
-              ALONG_AXIS_LIST: ['x']
-
-            - NAME: random_world_rotation
-              WORLD_ROT_ANGLE: [-0.78539816, 0.78539816]
-
-            - NAME: random_world_scaling
-              WORLD_SCALE_RANGE: [0.95, 1.05]
-            
-            - NAME: random_world_translation
-              NOISE_TRANSLATE_STD: [0.5, 0.5, 0.5]
-
     COLLECTIVE_DATA_PROCESSOR:
-        use_coop_info: False # whether to use coop data (needs to be False for early fusion)
-        early_fusion: True # use all point clouds as ego points
+        use_coop_info: True # whether to use coop data (needs to be False for early fusion)
+        early_fusion: False # use all point clouds as ego points
         transform_points_to_voxels:
-        VOXEL_SIZE: [ 0.05, 0.05, 0.1 ]
-        MAX_POINTS_PER_VOXEL: 5
-        MAX_NUMBER_OF_VOXELS: {
-            'train': 150000,
-            'test': 150000
-        }
+            VOXEL_SIZE: [ 0.05, 0.05, 0.1 ] # high resolution
+            MAX_POINTS_PER_VOXEL: 5
+            MAX_NUMBER_OF_VOXELS: {
+                'train': 150000,
+                'test': 150000
+            }
         voxel_method: single_resolution
-
 
 MODEL:
     NAME: CollectivePVRCNNPlusPlus
     
     VFE:
         NAME: MeanVFE
+    
+    COLLECTIVE_VFE:
+        NAME: CollectiveCenterVFE # To use the mean of the points instead of voxel centers use CollectiveMeanVFE
 
     BACKBONE_3D:
-        NAME: VoxelBackBone8x
+        NAME: SR3DNet
+        COLLECTIVE_INPUT_CHANNELS: 3 # When using only voxel centers 3, when using mean point features (with intensity) 4
+        CONV_CHANNELS: [16, 32, 64, 128]
+        COLLECTIVE_SUBM_PER_BLOCK: 2
+        LOCAL_SUBM_PER_BLOCK: 2
+        SCATTER_FUNC: max
+        FUSION_TYPE: 'scatter' # 'scatter'
+
+        LOC_STRIDES: [1, 2, 2, 2]
+        COLL_STRIDES: [1, 2, 2, 2] # high reolution
+        #COLL_STRIDES: [1, 1, 2, 2] # mid resolution
+        #COLL_STRIDES: [1, 1, 1, 2] # low resolution
+
+        LOC_GRID_SIZE: [41, 1600, 5600]
+        COLL_GRID_SIZE: [41, 1600, 5600] # high reolution
+        #COLL_GRID_SIZE: [21, 800, 2800] # mid resolution
+        #COLL_GRID_SIZE: [11, 400, 1400] # low resolution
+
+        # DSVT_FUSION_LAYER:
+        #     sparse_shapes: [[5600, 1600, 41], [2800, 800, 21], [1400, 400, 11], [700, 200, 5]]
+        #     downsample_stride: [[1, 1, 1]]
+        #     d_model: [[16], [32], [64], [64]]
+        #     set_info: [[48, 1]]
+        #     window_shape: [[10, 10, 41]]
+        #     hybrid_factor: [1, 1, 1] # x, y, z
+        #     shifts_list: [[[0, 0, 0], [6, 6, 0]]]
+        #     normalize_pos: False
+
+        #     CHANNELS: [16, 32, 64, 64]
+        #     NUM_HEADS: 8
+        #     DIM_FEEDFORWARD: 512 #<- this might be too small
+        #     DROPOUT: 0.1
+
 
     MAP_TO_BEV:
         NAME: HeightCompression
@@ -57,7 +76,7 @@ MODEL:
         CLASS_AGNOSTIC: False
 
         CLASS_NAMES_EACH_HEAD: [
-            [ 'Car', 'Pedestrian', 'Cyclist' ]
+            [ 'Car']
         ]
 
         SHARED_CONV_CHANNEL: 64
@@ -281,7 +300,7 @@ OPTIMIZATION:
     NUM_EPOCHS: 120
 
     OPTIMIZER: adam_onecycle
-    LR: 0.01
+    LR: 0.00154315
     WEIGHT_DECAY: 0.001
     MOMENTUM: 0.9
 

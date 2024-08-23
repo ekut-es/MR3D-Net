@@ -18,6 +18,7 @@ MODEL:
         CONV_CHANNELS: [16, 32, 64, 128]
         COLLECTIVE_SUBM_PER_BLOCK: 2
         LOCAL_SUBM_PER_BLOCK: 2
+        SCATTER_FUNC: max
 
         LOW_STRIDES: [1, 1, 1, 2]
         MID_STRIDES: [1, 1, 2, 2]

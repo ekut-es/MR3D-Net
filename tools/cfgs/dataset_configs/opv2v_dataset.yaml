@@ -50,7 +50,7 @@ DATA_PROCESSOR:
       }
 
 COLLECTIVE_DATA_PROCESSOR:
-    use_coop_info: True # whether to use coop data (needs to be False for early fusion)
+    use_coop_info: True # whether to use coop data
     early_fusion: False # use all point clouds as ego points
     limit_com_range: True
     range_limit: 70

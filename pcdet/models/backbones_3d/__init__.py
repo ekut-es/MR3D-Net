@@ -1,6 +1,6 @@
 from .pointnet2_backbone import PointNet2Backbone, PointNet2MSG
 from .spconv_backbone import VoxelBackBone8x, VoxelResBackBone8x
-from .mr3d_net import MR3DNet
+from .mr3d_net import MR3DNet, SR3DNet
 from .spconv_backbone_2d import PillarBackBone8x, PillarRes18BackBone8x
 from .spconv_backbone_focal import VoxelBackBone8xFocal
 from .spconv_backbone_voxelnext import VoxelResBackBone8xVoxelNeXt
@@ -11,6 +11,7 @@ from .dsvt import DSVT
 __all__ = {
     'VoxelBackBone8x': VoxelBackBone8x,
     'MR3DNet':MR3DNet,
+    'SR3DNet': SR3DNet,
     'UNetV2': UNetV2,
     'PointNet2Backbone': PointNet2Backbone,
     'PointNet2MSG': PointNet2MSG,

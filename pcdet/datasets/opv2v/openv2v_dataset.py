@@ -270,7 +270,7 @@ class OPV2VDataset(DatasetTemplate):
         
 
         if self.coop_voxel_generator is None:
-            if coop_data_config.voxel_method in ['all', 'individual']:
+            if coop_data_config.voxel_method == 'single_resolution':
                 self.coop_voxel_generator = VoxelGeneratorWrapper(
                     vsize_xyz=coop_voxel_config.VOXEL_SIZE,
                     coors_range_xyz=self.point_cloud_range,
@@ -290,9 +290,14 @@ class OPV2VDataset(DatasetTemplate):
                             max_num_voxels=coop_voxel_config.MAX_NUMBER_OF_VOXELS[self.mode],
                         ))
         
-        # sparse voxelization of all coop points
-        if coop_data_config.voxel_method == 'all':
-            coop_points = np.concatenate(data_dict['coop_points'], axis=0)
+        # sparse voxelization of coop points
+        if coop_data_config.voxel_method == 'single_resolution':
+            # use local point cloud as fallback if no other vehicles are in range
+            if len(data_dict['coop_points']) == 0:
+                coop_points = data_dict['points']
+            else: 
+                 coop_points = np.concatenate(data_dict['coop_points'], axis=0)
+
             coop_voxels, coop_coordinates, coop_num_points = self.coop_voxel_generator.generate(coop_points)
             data_dict['coop_voxels'] = coop_voxels
             data_dict['coop_voxel_coords'] = coop_coordinates
@@ -300,9 +305,6 @@ class OPV2VDataset(DatasetTemplate):
             # add resolution and pc range for voxel center calculation in vfe
             data_dict['resolution'] = coop_voxel_config.VOXEL_SIZE
             data_dict['point_cloud_range'] = self.point_cloud_range
-
-        elif coop_data_config.voxel_method == 'individual':
-            pass
         elif coop_data_config.voxel_method == 'multi_resolution':
             resolution_names = ['high', 'mid', 'low']
             points_at_resolution = self.map_coop_points_to_resolutions(data_dict['coop_points'], data_dict['points'], coop_data_config.assign_method)
