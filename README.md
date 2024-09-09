@@ -3,7 +3,7 @@
 **by Sven Teufel, Jörg Gamerdinger, Georg Volk, and Oliver Bringmann**
 
 ## Overview
-This repository contains the official code for the **ITSC 2024** paper [MR3D-Net: Dynamic Multi-Resolution 3D Sparse Voxel Grid Fusion for LiDAR-Based Collective Perception](todo).
+This repository contains the official code for the **ITSC 2024** paper [MR3D-Net: Dynamic Multi-Resolution 3D Sparse Voxel Grid Fusion for LiDAR-Based Collective Perception](https://arxiv.org/abs/2408.06137v1).
 MR3D-Net is a multi-resolution sparse voxel grid fusion architecture for LiDAR-based collective perception. MR3D-Net achieves state-of-the-art results on the OPV2V Benchmark while reducing the required bandwidth by up to 94%. 
 As an environment representation MR3D-Net soley relies on sparse voxel grids at different resolutions that can be dynamically assigned to adapt to the limitations in wireless communication.
 Sparse voxel grids can not only drastically reduce the required bandwidth, but also provide a unified and interchangable representation of the environment.
