@@ -103,6 +103,30 @@ For more details on training and testing configuration please have a look at tra
 | Dynamic Resolution                 | 82.4          | 9.2                     | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/c31c56a649a7476f87af/)    |
 | Mean Features (Dynamic Resolution) | 81.7          | 42.2                    | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/6bc916642f10494da3ef/)    |
 
+## Single Resolution 3D Net (SR3D-Net)
+We also provide a more lightweight backbone for non-dynamic single resolution sparse voxel grid fusion with only one input stream at the respective resolution called SR3D-Net.
+SR3D-Net achieves similar results as MR3D-Net with single resolutions. SR3D-Net can be configured in cfgs/opv2v_models/sr3d-net.yaml.
+
+To train MR3D-Net run
+```shell
+cd tools
+python train_mr3d_net.py --cfg_file "cfgs/opv2v_models/sr3d-net.yaml" --extra_tag "name of experiment"
+```
+
+## Testing
+
+To test MR3D-Net run 
+```shell
+python test.py --cfg_file "cfgs/opv2v_models/sr3d-net.yaml" --ckpt "path to checkpoint"
+```
+For more details on training and testing configuration please have a look at train.py and test.py
+
+### MR3D-Net Results on OPV2V
+
+|                                    | Car AP@IoU0.7 | Bandwidth@10Hz [Mbit/s] | Model Checkpoint                                                              |
+| :--------------------------------: | :-----------: | :---------------------: | :---------------------------------------------------------------------------: |
+| High Resolution                    | 83.6          | 14.4                    | [`download`](https://es-cloud.cs.uni-tuebingen.de/f/ed4a143a05b047938afa/)    |
+
 ## Citation
 If you find this project useful in your research, please consider citing:
 ```
